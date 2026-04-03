@@ -13,6 +13,10 @@ const options = {
     },
     servers: [
       {
+        url: 'https://estate-server-nine.vercel.app',
+        description: 'Production (Vercel)',
+      },
+      {
         url: 'http://localhost:3000',
         description: 'Local development',
       },
