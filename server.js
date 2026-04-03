@@ -24,36 +24,64 @@ const uploadsRoot = path.join(__dirname, '../uploads');
   }
 });
 
-app.use(
-  cors({
-    origin: '*',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'x-auth-token',
-      'Access-Control-Allow-Headers',
-      'Access-Control-Allow-Origin',
-      'Access-Control-Allow-Methods',
-      'Access-Control-Allow-Credentials',
-      'X-Requested-With',
-    ],
-    exposedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
-    optionsSuccessStatus: 200,
-  }),
-);
+/** Normalize origin for comparison (no trailing slash). */
+function normalizeOrigin(origin) {
+  return (origin || '').replace(/\/$/, '');
+}
 
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Credentials', true);
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.header(
+const DEFAULT_BROWSER_ORIGINS = ['https://gt-estate-server-zhly.vercel.app'];
+
+function buildAllowedOriginSet() {
+  const set = new Set();
+  DEFAULT_BROWSER_ORIGINS.forEach((o) => set.add(normalizeOrigin(o)));
+  (process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map((s) => normalizeOrigin(s.trim()))
+    .filter(Boolean)
+    .forEach((o) => set.add(o));
+  return set;
+}
+
+const allowedOrigins = buildAllowedOriginSet();
+
+function isLocalDevOrigin(origin) {
+  const o = normalizeOrigin(origin);
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(o);
+}
+
+function isOriginAllowed(origin) {
+  if (!origin) return true;
+  const o = normalizeOrigin(origin);
+  if (allowedOrigins.has(o)) return true;
+  if (isLocalDevOrigin(o)) return true;
+  return false;
+}
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (isOriginAllowed(origin)) {
+      return callback(null, true);
+    }
+    console.warn('CORS blocked Origin:', origin);
+    callback(null, false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'x-auth-token',
     'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-auth-token',
-  );
-  next();
-});
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Methods',
+    'Access-Control-Allow-Credentials',
+    'X-Requested-With',
+  ],
+  exposedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -76,7 +104,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.options('*', cors());
+app.options('*', cors(corsOptions));
 
 if (process.env.NODE_ENV !== 'production') {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, { explorer: true }));
