@@ -66,12 +66,28 @@ function isVercelFrontendOrigin(origin) {
   }
 }
 
+/** Public marketing site on gtestates.com.pk (apex and www). */
+function isGtEstatesPkOrigin(origin) {
+  const o = normalizeOrigin(origin);
+  try {
+    const u = new URL(o);
+    const host = u.hostname.toLowerCase();
+    if (host !== 'gtestates.com.pk' && host !== 'www.gtestates.com.pk') return false;
+    if (u.protocol === 'https:') return true;
+    if (process.env.NODE_ENV !== 'production' && u.protocol === 'http:') return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 function isOriginAllowed(origin) {
   if (!origin) return true;
   const o = normalizeOrigin(origin);
   if (allowedOrigins.has(o)) return true;
   if (isLocalDevOrigin(o)) return true;
   if (isVercelFrontendOrigin(o)) return true;
+  if (isGtEstatesPkOrigin(o)) return true;
   return false;
 }
 

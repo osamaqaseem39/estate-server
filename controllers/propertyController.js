@@ -11,18 +11,47 @@ function parseBool(v) {
   return false;
 }
 
+/** Gallery paths/URLs from JSON body or multipart text field (newline/comma-separated). */
+function parseGalleryFromBody(body) {
+  if (Array.isArray(body.gallery)) {
+    return body.gallery.map(String).map((s) => s.trim()).filter(Boolean);
+  }
+  if (typeof body.gallery === 'string' && body.gallery.trim()) {
+    try {
+      const parsed = JSON.parse(body.gallery);
+      if (Array.isArray(parsed)) {
+        return parsed.map(String).map((s) => s.trim()).filter(Boolean);
+      }
+    } catch {
+      /* treat as raw string */
+    }
+    return body.gallery
+      .split(/[\n,]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  if (body.galleryUrls != null && String(body.galleryUrls).trim()) {
+    return String(body.galleryUrls)
+      .split(/[\n,]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
 exports.createProperty = async (req, res) => {
   try {
     const body = req.body;
     let primaryImage = body.primaryImage || '';
-    let gallery = [];
+    let gallery = parseGalleryFromBody(body);
 
     if (req.files) {
       if (req.files.primaryImage?.[0]) {
         primaryImage = `/uploads/properties/${req.files.primaryImage[0].filename}`;
       }
       if (req.files.gallery?.length) {
-        gallery = req.files.gallery.map((f) => `/uploads/properties/${f.filename}`);
+        const uploaded = req.files.gallery.map((f) => `/uploads/properties/${f.filename}`);
+        gallery = [...gallery, ...uploaded];
       }
     }
 
@@ -72,7 +101,11 @@ exports.updateProperty = async (req, res) => {
       update.primaryImage = `/uploads/properties/${req.files.primaryImage[0].filename}`;
     }
     if (req.files?.gallery?.length) {
-      update.gallery = req.files.gallery.map((f) => `/uploads/properties/${f.filename}`);
+      const fromBody = parseGalleryFromBody(body);
+      const uploaded = req.files.gallery.map((f) => `/uploads/properties/${f.filename}`);
+      update.gallery = [...fromBody, ...uploaded];
+    } else if (body.gallery !== undefined || body.galleryUrls !== undefined) {
+      update.gallery = parseGalleryFromBody(body);
     }
 
     const doc = await Property.findByIdAndUpdate(req.params.id, update, { new: true });
