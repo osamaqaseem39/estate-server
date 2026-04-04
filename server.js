@@ -29,11 +29,9 @@ function normalizeOrigin(origin) {
   return (origin || '').replace(/\/$/, '');
 }
 
-const DEFAULT_BROWSER_ORIGINS = ['https://gt-estate-server-zhly.vercel.app'];
-
+/** Explicit browser origins (marketing site, dashboard, custom domains). Comma-separated in CORS_ORIGINS. */
 function buildAllowedOriginSet() {
   const set = new Set();
-  DEFAULT_BROWSER_ORIGINS.forEach((o) => set.add(normalizeOrigin(o)));
   (process.env.CORS_ORIGINS || '')
     .split(',')
     .map((s) => normalizeOrigin(s.trim()))
@@ -46,7 +44,28 @@ const allowedOrigins = buildAllowedOriginSet();
 
 function isLocalDevOrigin(origin) {
   const o = normalizeOrigin(origin);
-  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(o);
+  if (/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i.test(o)) return true;
+  // Non-prod: phone / another PC hitting your machine by LAN IP
+  if (process.env.NODE_ENV !== 'production') {
+    return /^https?:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+)?$/i.test(
+      o
+    );
+  }
+  return false;
+}
+
+/** Dashboard / website on Vercel (https://*.vercel.app). Disable with CORS_STRICT=true. */
+function isVercelFrontendOrigin(origin) {
+  if (process.env.CORS_STRICT === 'true') return false;
+  const o = normalizeOrigin(origin);
+  try {
+    const u = new URL(o);
+    if (u.protocol !== 'https:') return false;
+    const host = u.hostname.toLowerCase();
+    return host === 'vercel.app' || host.endsWith('.vercel.app');
+  } catch {
+    return false;
+  }
 }
 
 function isOriginAllowed(origin) {
@@ -54,6 +73,7 @@ function isOriginAllowed(origin) {
   const o = normalizeOrigin(origin);
   if (allowedOrigins.has(o)) return true;
   if (isLocalDevOrigin(o)) return true;
+  if (isVercelFrontendOrigin(o)) return true;
   return false;
 }
 
@@ -87,6 +107,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
   const state = mongoose.connection.readyState;
   const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
 
