@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
+const auth = require('../middleware/auth');
 const { registerUser } = require('../controllers/authController');
 
 /**
@@ -119,6 +120,24 @@ const { registerUser } = require('../controllers/authController');
  *       500:
  *         description: Server error
  */
+router.get('/profile', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({
+      id: user._id.toString(),
+      name: user.username,
+      email: user.email,
+      role: user.role,
+    });
+  } catch (error) {
+    console.error('profile error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 router.get('/can-register-admin', async (req, res) => {
   try {
     const adminExists = await User.exists({ role: 'admin' });
