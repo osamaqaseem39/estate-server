@@ -10,7 +10,7 @@ exports.registerUser = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { username, email, password } = req.body;
+    const { username, email, password, role: requestedRole } = req.body;
 
     // Check if user already exists
     let user = await User.findOne({ $or: [{ email }, { username }] });
@@ -18,11 +18,16 @@ exports.registerUser = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    const adminExists = await User.exists({ role: 'admin' });
+    const role =
+      requestedRole === 'admin' && !adminExists ? 'admin' : 'user';
+
     // Create new user
     user = new User({
       username,
       email,
-      password
+      password,
+      role
     });
 
     await user.save();

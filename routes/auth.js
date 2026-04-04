@@ -119,11 +119,22 @@ const { registerUser } = require('../controllers/authController');
  *       500:
  *         description: Server error
  */
+router.get('/can-register-admin', async (req, res) => {
+  try {
+    const adminExists = await User.exists({ role: 'admin' });
+    res.json({ canRegisterAdmin: !adminExists });
+  } catch (error) {
+    console.error('can-register-admin error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 router.post('/register',
   [
     body('username').trim().isLength({ min: 3 }),
     body('email').isEmail().normalizeEmail(),
-    body('password').isLength({ min: 6 })
+    body('password').isLength({ min: 6 }),
+    body('role').optional().isIn(['user', 'admin'])
   ],
   registerUser
 );
