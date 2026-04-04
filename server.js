@@ -11,17 +11,15 @@ const authRoutes = require('./routes/auth');
 const propertyRoutes = require('./routes/properties');
 const galleryRoutes = require('./routes/gallery');
 const careerRoutes = require('./routes/careers');
+const { getUploadsRoot, ensureUploadSubdir } = require('./uploadPaths');
 
 dotenv.config();
 
 const app = express();
 
-const uploadsRoot = path.join(__dirname, '../uploads');
+const uploadsRoot = getUploadsRoot();
 ['properties', 'gallery', 'careers'].forEach((sub) => {
-  const dir = path.join(uploadsRoot, sub);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
+  ensureUploadSubdir(sub);
 });
 
 /** Normalize origin for comparison (no trailing slash). */

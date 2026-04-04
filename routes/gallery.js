@@ -1,9 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 const auth = require('../middleware/auth');
+const { ensureUploadSubdir } = require('../uploadPaths');
 const {
   createGalleryItem,
   updateGalleryItem,
@@ -14,10 +13,7 @@ const {
   deleteGalleryItem,
 } = require('../controllers/galleryController');
 
-const uploadDir = path.join(__dirname, '../../uploads/gallery');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+const uploadDir = ensureUploadSubdir('gallery');
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadDir),

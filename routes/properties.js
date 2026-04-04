@@ -1,9 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 const auth = require('../middleware/auth');
+const { ensureUploadSubdir } = require('../uploadPaths');
 const {
   createProperty,
   updateProperty,
@@ -12,10 +11,7 @@ const {
   deleteProperty,
 } = require('../controllers/propertyController');
 
-const uploadDir = path.join(__dirname, '../../uploads/properties');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+const uploadDir = ensureUploadSubdir('properties');
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadDir),
