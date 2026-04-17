@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const auth = require('../middleware/auth');
 const { ensureUploadSubdir } = require('../uploadPaths');
+const { MAX_CV_UPLOAD_BYTES } = require('../uploadLimits');
 const {
   submitApplication,
   listApplications,
@@ -19,7 +20,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({
   storage,
-  limits: { fileSize: 8 * 1024 * 1024 },
+  limits: { fileSize: MAX_CV_UPLOAD_BYTES },
   fileFilter: (_req, file, cb) => {
     const ok =
       /pdf|msword|wordprocessingml/.test(file.mimetype) ||

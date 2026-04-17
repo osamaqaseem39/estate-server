@@ -11,6 +11,7 @@ const authRoutes = require('./routes/auth');
 const propertyRoutes = require('./routes/properties');
 const galleryRoutes = require('./routes/gallery');
 const careerRoutes = require('./routes/careers');
+const inquiryRoutes = require('./routes/inquiries');
 const { getUploadsRoot, ensureUploadSubdir } = require('./uploadPaths');
 
 dotenv.config();
@@ -194,6 +195,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/careers', careerRoutes);
+app.use('/api/inquiries', inquiryRoutes);
 
 app.use('/uploads/properties', express.static(path.join(uploadsRoot, 'properties')));
 app.use('/uploads/gallery', express.static(path.join(uploadsRoot, 'gallery')));
@@ -222,6 +224,7 @@ app.get('/', (req, res) => {
       properties: '/api/properties',
       gallery: '/api/gallery',
       careers: '/api/careers/applications',
+      inquiries: '/api/inquiries',
       auth: '/api/auth',
       docs: process.env.NODE_ENV !== 'production' ? '/api-docs' : null,
     },
@@ -230,6 +233,15 @@ app.get('/', (req, res) => {
 
 app.use((err, req, res, next) => {
   console.error('Error:', err);
+  if (err.name === 'MulterError' && err.code) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({
+        error: 'File too large',
+        code: err.code,
+      });
+    }
+    return res.status(400).json({ error: err.message, code: err.code });
+  }
   if (err.message && err.message.includes('Only PDF and Word')) {
     return res.status(400).json({ error: err.message });
   }

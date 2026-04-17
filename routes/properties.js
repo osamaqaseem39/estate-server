@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const auth = require('../middleware/auth');
 const { ensureUploadSubdir } = require('../uploadPaths');
+const { MAX_IMAGE_UPLOAD_BYTES } = require('../uploadLimits');
 const {
   createProperty,
   updateProperty,
@@ -19,7 +20,10 @@ const storage = multer.diskStorage({
     cb(null, `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')}`);
   },
 });
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: MAX_IMAGE_UPLOAD_BYTES },
+});
 
 router.get('/', listProperties);
 router.get('/:id', getProperty);
