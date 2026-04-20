@@ -62,7 +62,7 @@ exports.updateGalleryItem = async (req, res) => {
 
 exports.listPublishedGallery = async (req, res) => {
   try {
-    const items = await GalleryItem.find({ published: true }).sort({ sortOrder: 1, createdAt: -1 });
+    const items = await GalleryItem.find({}).sort({ sortOrder: 1, createdAt: -1 });
     res.json(items);
   } catch (err) {
     res.status(500).json({ error: err.message });
