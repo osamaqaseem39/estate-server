@@ -93,25 +93,10 @@ function isOriginAllowed(origin) {
 }
 
 const corsOptions = {
-  origin(origin, callback) {
-    if (isOriginAllowed(origin)) {
-      return callback(null, true);
-    }
-    console.warn('CORS blocked Origin:', origin);
-    callback(null, false);
-  },
+  origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'x-auth-token',
-    'Access-Control-Allow-Headers',
-    'Access-Control-Allow-Origin',
-    'Access-Control-Allow-Methods',
-    'Access-Control-Allow-Credentials',
-    'X-Requested-With',
-  ],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
   exposedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
   optionsSuccessStatus: 200,
 };
@@ -196,6 +181,13 @@ app.use('/api/properties', propertyRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/careers', careerRoutes);
 app.use('/api/inquiries', inquiryRoutes);
+
+/** Simple root-level aliases (no /api prefix) */
+app.use('/auth', authRoutes);
+app.use('/properties', propertyRoutes);
+app.use('/gallery', galleryRoutes);
+app.use('/careers', careerRoutes);
+app.use('/inquiries', inquiryRoutes);
 
 app.use('/uploads/properties', express.static(path.join(uploadsRoot, 'properties')));
 app.use('/uploads/gallery', express.static(path.join(uploadsRoot, 'gallery')));

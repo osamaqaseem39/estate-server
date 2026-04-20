@@ -13,7 +13,7 @@ const options = {
     },
     servers: [
       {
-        url: 'https://estate-server-nine.vercel.app',
+        url: 'https://gt-estate-server.vercel.app',
         description: 'Production (Vercel)',
       },
       {
