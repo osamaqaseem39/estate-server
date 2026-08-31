@@ -4,6 +4,7 @@ const galleryItemSchema = new mongoose.Schema(
   {
     imageUrl: { type: String, required: true, trim: true },
     alt: { type: String, default: 'GT Estates project' },
+    titleTag: { type: String, default: '' },
     shape: {
       type: String,
       enum: ['portrait', 'landscape', 'square'],

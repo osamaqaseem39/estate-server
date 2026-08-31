@@ -15,6 +15,12 @@ const inquiryRoutes = require('./routes/inquiries');
 const reviewRoutes = require('./routes/reviews');
 const teamRoutes = require('./routes/team');
 const siteContentRoutes = require('./routes/site-content');
+const pagesRoutes = require('./routes/pages');
+const whatWeDoRoutes = require('./routes/what-we-do');
+const newsRoutes = require('./routes/news');
+const eventsRoutes = require('./routes/events');
+const loanApplicationRoutes = require('./routes/loan-applications');
+const paymentPlansRoutes = require('./routes/payment-plans');
 const { getUploadsRoot, ensureUploadSubdir } = require('./uploadPaths');
 
 dotenv.config();
@@ -187,6 +193,12 @@ app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/site-content', siteContentRoutes);
+app.use('/api/pages', pagesRoutes);
+app.use('/api/what-we-do', whatWeDoRoutes);
+app.use('/api/news', newsRoutes);
+app.use('/api/events', eventsRoutes);
+app.use('/api/loan-applications', loanApplicationRoutes);
+app.use('/api/payment-plans', paymentPlansRoutes);
 
 /** Simple root-level aliases (no /api prefix) */
 app.use('/auth', authRoutes);
@@ -197,6 +209,12 @@ app.use('/inquiries', inquiryRoutes);
 app.use('/reviews', reviewRoutes);
 app.use('/team', teamRoutes);
 app.use('/site-content', siteContentRoutes);
+app.use('/pages', pagesRoutes);
+app.use('/what-we-do', whatWeDoRoutes);
+app.use('/news', newsRoutes);
+app.use('/events', eventsRoutes);
+app.use('/loan-applications', loanApplicationRoutes);
+app.use('/payment-plans', paymentPlansRoutes);
 
 app.use('/uploads/properties', express.static(path.join(uploadsRoot, 'properties')));
 app.use('/uploads/gallery', express.static(path.join(uploadsRoot, 'gallery')));

@@ -1,0 +1,43 @@
+const mongoose = require('mongoose');
+
+const loanApplicationSchema = new mongoose.Schema(
+  {
+    applicantType: { type: String, default: '' },
+    cnicStatus: { type: String, default: '' },
+    maritalStatus: { type: String, default: '' },
+    gender: { type: String, default: '' },
+    employmentStatus: { type: String, default: '' },
+    monthlyIncomeRange: { type: String, default: '' },
+    purposeOfFinancing: { type: String, default: '' },
+    propertyType: { type: String, default: '' },
+    propertyStatus: { type: String, default: '' },
+    propertyOwnership: { type: String, default: '' },
+    propertySize: { type: String, default: '' },
+    requiredLoanAmount: { type: String, default: '' },
+    requiredLoanAmountCustom: { type: String, default: '' },
+    preferredLoanTenure: { type: String, default: '' },
+    currentHomeOwnership: { type: String, default: '' },
+    preferredBank: { type: String, default: '' },
+    city: { type: String, default: '' },
+    fullName: { type: String, required: true, trim: true },
+    fatherOrHusbandName: { type: String, default: '' },
+    cnicNumber: { type: String, default: '' },
+    dateOfBirth: { type: String, default: '' },
+    mobileNumber: { type: String, required: true, trim: true },
+    email: { type: String, default: '' },
+    currentAddress: { type: String, default: '' },
+    permanentAddress: { type: String, default: '' },
+    province: { type: String, default: '' },
+    monthlyGrossIncome: { type: String, default: '' },
+    monthlyNetIncome: { type: String, default: '' },
+    existingMonthlyLoanInstallments: { type: String, default: '' },
+    monthlyRent: { type: String, default: '' },
+    otherIncome: { type: String, default: '' },
+    employmentOrBusinessName: { type: String, default: '' },
+    yearsInEmploymentOrBusiness: { type: String, default: '' },
+    status: { type: String, enum: ['new', 'reviewed', 'contacted', 'closed'], default: 'new' },
+  },
+  { timestamps: true },
+);
+
+module.exports = mongoose.model('LoanApplication', loanApplicationSchema);

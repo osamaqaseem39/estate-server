@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Property = require('../models/Property');
+const { slugify } = require('../utils/slugify');
 
 function validId(id) {
   return mongoose.Types.ObjectId.isValid(id);
@@ -58,6 +59,47 @@ function parseGalleryFromBody(body) {
   return [];
 }
 
+function parseInventory(body) {
+  let inventory = body.inventory;
+  if (typeof inventory === 'string') {
+    try { inventory = JSON.parse(inventory); } catch { inventory = []; }
+  }
+  return Array.isArray(inventory) ? inventory : [];
+}
+
+function parsePaymentPlan(body) {
+  let plan = body.paymentPlan;
+  if (typeof plan === 'string') {
+    try { plan = JSON.parse(plan); } catch { plan = null; }
+  }
+  if (!plan || typeof plan !== 'object') return undefined;
+  return {
+    enabled: plan.enabled === true || plan.enabled === 'true',
+    title: plan.title || 'Payment Plan',
+    rows: Array.isArray(plan.rows) ? plan.rows : [],
+  };
+}
+
+function resolveSlug(body, title) {
+  const raw = body.slug != null ? String(body.slug) : '';
+  const base = raw.trim() || title || '';
+  return slugify(base);
+}
+
+async function ensureUniqueSlug(baseSlug, excludeId) {
+  let slug = baseSlug;
+  let n = 0;
+  while (slug) {
+    const filter = { slug };
+    if (excludeId && validId(excludeId)) filter._id = { $ne: excludeId };
+    const exists = await Property.findOne(filter);
+    if (!exists) return slug;
+    n += 1;
+    slug = `${baseSlug}-${n}`;
+  }
+  return baseSlug;
+}
+
 exports.createProperty = async (req, res) => {
   try {
     const body = req.body;
@@ -80,6 +122,7 @@ exports.createProperty = async (req, res) => {
 
     const doc = new Property({
       title: body.title,
+      slug: await ensureUniqueSlug(resolveSlug(body, body.title)),
       description: body.description || '',
       location: body.location,
       marla: body.marla,
@@ -89,6 +132,8 @@ exports.createProperty = async (req, res) => {
       featured: parseBool(body.featured),
       primaryImage,
       gallery,
+      inventory: parseInventory(body),
+      ...(parsePaymentPlan(body) && { paymentPlan: parsePaymentPlan(body) }),
       sortOrder: body.sortOrder != null ? Number(body.sortOrder) : 0,
     });
 
@@ -119,6 +164,14 @@ exports.updateProperty = async (req, res) => {
       ...(body.featured !== undefined && { featured: parseBool(body.featured) }),
       ...(body.sortOrder != null && { sortOrder: Number(body.sortOrder) }),
     };
+
+    if (body.slug != null || (body.title != null && !body.slug)) {
+      const nextSlug = resolveSlug(body, body.title);
+      if (nextSlug) update.slug = await ensureUniqueSlug(nextSlug, req.params.id);
+    }
+    if (body.inventory !== undefined) update.inventory = parseInventory(body);
+    const plan = parsePaymentPlan(body);
+    if (plan !== undefined) update.paymentPlan = plan;
 
     if (req.files?.primaryImage?.[0]) {
       update.primaryImage = `/uploads/properties/${req.files.primaryImage[0].filename}`;
@@ -160,10 +213,24 @@ exports.listProperties = async (req, res) => {
 
 exports.getProperty = async (req, res) => {
   try {
-    if (!validId(req.params.id)) {
-      return res.status(400).json({ error: 'Invalid property id' });
+    const param = req.params.id;
+    let doc = null;
+    if (validId(param)) {
+      doc = await Property.findById(param);
     }
-    const doc = await Property.findById(req.params.id);
+    if (!doc) {
+      doc = await Property.findOne({ slug: param.toLowerCase() });
+    }
+    if (!doc) return res.status(404).json({ error: 'Property not found' });
+    res.json(doc);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getPropertyBySlug = async (req, res) => {
+  try {
+    const doc = await Property.findOne({ slug: req.params.slug.toLowerCase() });
     if (!doc) return res.status(404).json({ error: 'Property not found' });
     res.json(doc);
   } catch (err) {

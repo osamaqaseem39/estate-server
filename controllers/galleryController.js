@@ -20,6 +20,7 @@ exports.createGalleryItem = async (req, res) => {
     const doc = new GalleryItem({
       imageUrl,
       alt: body.alt || 'GT Estates project',
+      titleTag: body.titleTag || body.title || '',
       shape: body.shape || 'landscape',
       display: body.display || 'grid',
       category: body.category || 'general',
@@ -39,6 +40,8 @@ exports.updateGalleryItem = async (req, res) => {
     const body = req.body;
     const update = {
       ...(body.alt != null && { alt: body.alt }),
+      ...(body.titleTag != null && { titleTag: body.titleTag }),
+      ...(body.title != null && { titleTag: body.title }),
       ...(body.shape != null && { shape: body.shape }),
       ...(body.display != null && { display: body.display }),
       ...(body.category != null && { category: body.category }),

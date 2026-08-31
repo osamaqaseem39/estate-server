@@ -9,6 +9,7 @@ const {
   updateProperty,
   listProperties,
   getProperty,
+  getPropertyBySlug,
   deleteProperty,
 } = require('../controllers/propertyController');
 
@@ -26,6 +27,7 @@ const upload = multer({
 });
 
 router.get('/', listProperties);
+router.get('/slug/:slug', getPropertyBySlug);
 router.get('/:id', getProperty);
 
 router.post(
@@ -39,6 +41,16 @@ router.post(
 );
 
 router.put(
+  '/:id',
+  auth,
+  upload.fields([
+    { name: 'primaryImage', maxCount: 1 },
+    { name: 'gallery', maxCount: 20 },
+  ]),
+  updateProperty,
+);
+
+router.patch(
   '/:id',
   auth,
   upload.fields([
