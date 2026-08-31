@@ -11,29 +11,48 @@ function parseBool(v) {
   return false;
 }
 
-/** Gallery paths/URLs from JSON body or multipart text field (newline/comma-separated). */
+/** Normalizes one gallery entry to { url, alt, title }. Accepts a legacy plain URL string or an object. */
+function normalizeGalleryEntry(item) {
+  if (item == null) return null;
+  if (typeof item === 'string') {
+    const url = item.trim();
+    return url ? { url, alt: '', title: '' } : null;
+  }
+  if (typeof item === 'object') {
+    const url = String(item.url || item.imageUrl || '').trim();
+    if (!url) return null;
+    return {
+      url,
+      alt: String(item.alt || '').trim(),
+      title: String(item.title || '').trim(),
+    };
+  }
+  return null;
+}
+
+/** Gallery entries from JSON body (array of strings or {url,alt,title}) or multipart text field (newline/comma-separated URLs). */
 function parseGalleryFromBody(body) {
   if (Array.isArray(body.gallery)) {
-    return body.gallery.map(String).map((s) => s.trim()).filter(Boolean);
+    return body.gallery.map(normalizeGalleryEntry).filter(Boolean);
   }
   if (typeof body.gallery === 'string' && body.gallery.trim()) {
     try {
       const parsed = JSON.parse(body.gallery);
       if (Array.isArray(parsed)) {
-        return parsed.map(String).map((s) => s.trim()).filter(Boolean);
+        return parsed.map(normalizeGalleryEntry).filter(Boolean);
       }
     } catch {
       /* treat as raw string */
     }
     return body.gallery
       .split(/[\n,]+/)
-      .map((s) => s.trim())
+      .map((s) => normalizeGalleryEntry(s))
       .filter(Boolean);
   }
   if (body.galleryUrls != null && String(body.galleryUrls).trim()) {
     return String(body.galleryUrls)
       .split(/[\n,]+/)
-      .map((s) => s.trim())
+      .map((s) => normalizeGalleryEntry(s))
       .filter(Boolean);
   }
   return [];
@@ -50,7 +69,11 @@ exports.createProperty = async (req, res) => {
         primaryImage = `/uploads/properties/${req.files.primaryImage[0].filename}`;
       }
       if (req.files.gallery?.length) {
-        const uploaded = req.files.gallery.map((f) => `/uploads/properties/${f.filename}`);
+        const uploaded = req.files.gallery.map((f) => ({
+          url: `/uploads/properties/${f.filename}`,
+          alt: '',
+          title: '',
+        }));
         gallery = [...gallery, ...uploaded];
       }
     }
@@ -102,7 +125,11 @@ exports.updateProperty = async (req, res) => {
     }
     if (req.files?.gallery?.length) {
       const fromBody = parseGalleryFromBody(body);
-      const uploaded = req.files.gallery.map((f) => `/uploads/properties/${f.filename}`);
+      const uploaded = req.files.gallery.map((f) => ({
+        url: `/uploads/properties/${f.filename}`,
+        alt: '',
+        title: '',
+      }));
       update.gallery = [...fromBody, ...uploaded];
     } else if (body.gallery !== undefined || body.galleryUrls !== undefined) {
       update.gallery = parseGalleryFromBody(body);

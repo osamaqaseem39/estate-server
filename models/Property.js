@@ -19,7 +19,9 @@ const propertySchema = new mongoose.Schema(
     },
     featured: { type: Boolean, default: false },
     primaryImage: { type: String, default: '' },
-    gallery: [{ type: String }],
+    // Mixed: legacy docs store plain URL strings; new docs store { url, alt, title }.
+    // Kept untyped so old string entries load without a cast/migration.
+    gallery: { type: [mongoose.Schema.Types.Mixed], default: [] },
     sortOrder: { type: Number, default: 0 },
   },
   { timestamps: true },

@@ -12,6 +12,9 @@ const propertyRoutes = require('./routes/properties');
 const galleryRoutes = require('./routes/gallery');
 const careerRoutes = require('./routes/careers');
 const inquiryRoutes = require('./routes/inquiries');
+const reviewRoutes = require('./routes/reviews');
+const teamRoutes = require('./routes/team');
+const siteContentRoutes = require('./routes/site-content');
 const { getUploadsRoot, ensureUploadSubdir } = require('./uploadPaths');
 
 dotenv.config();
@@ -19,7 +22,7 @@ dotenv.config();
 const app = express();
 
 const uploadsRoot = getUploadsRoot();
-['properties', 'gallery', 'careers'].forEach((sub) => {
+['properties', 'gallery', 'careers', 'reviews', 'team'].forEach((sub) => {
   ensureUploadSubdir(sub);
 });
 
@@ -181,6 +184,9 @@ app.use('/api/properties', propertyRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/careers', careerRoutes);
 app.use('/api/inquiries', inquiryRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/team', teamRoutes);
+app.use('/api/site-content', siteContentRoutes);
 
 /** Simple root-level aliases (no /api prefix) */
 app.use('/auth', authRoutes);
@@ -188,10 +194,15 @@ app.use('/properties', propertyRoutes);
 app.use('/gallery', galleryRoutes);
 app.use('/careers', careerRoutes);
 app.use('/inquiries', inquiryRoutes);
+app.use('/reviews', reviewRoutes);
+app.use('/team', teamRoutes);
+app.use('/site-content', siteContentRoutes);
 
 app.use('/uploads/properties', express.static(path.join(uploadsRoot, 'properties')));
 app.use('/uploads/gallery', express.static(path.join(uploadsRoot, 'gallery')));
 app.use('/uploads/careers', express.static(path.join(uploadsRoot, 'careers')));
+app.use('/uploads/reviews', express.static(path.join(uploadsRoot, 'reviews')));
+app.use('/uploads/team', express.static(path.join(uploadsRoot, 'team')));
 
 app.get('/', (req, res) => {
   const mongoStatus = {
@@ -208,7 +219,7 @@ app.get('/', (req, res) => {
     name: 'GT Estate API',
     status: mongoStatus.isConnected ? 'healthy' : 'unhealthy',
     message: mongoStatus.isConnected
-      ? 'Real estate API — properties, gallery, careers'
+      ? 'Real estate API — properties, gallery, careers, reviews, team, site content'
       : 'Server running; database not connected',
     timestamp: new Date().toISOString(),
     mongodb: mongoStatus,
@@ -217,6 +228,9 @@ app.get('/', (req, res) => {
       gallery: '/api/gallery',
       careers: '/api/careers/applications',
       inquiries: '/api/inquiries',
+      reviews: '/api/reviews',
+      team: '/api/team',
+      siteContent: '/api/site-content',
       auth: '/api/auth',
       docs: process.env.NODE_ENV !== 'production' ? '/api-docs' : null,
     },
