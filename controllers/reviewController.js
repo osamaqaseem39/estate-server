@@ -6,10 +6,27 @@ function parseBool(v) {
   return false;
 }
 
+/** Accept dashboard `image` or legacy `avatarUrl`. */
+function resolveAvatarUrl(body) {
+  if (!body) return '';
+  if (body.avatarUrl != null && String(body.avatarUrl).trim() !== '') return String(body.avatarUrl).trim();
+  if (body.image != null && String(body.image).trim() !== '') return String(body.image).trim();
+  return '';
+}
+
+function toPublicReview(doc) {
+  const o = doc.toObject ? doc.toObject() : { ...doc };
+  return {
+    ...o,
+    id: String(o._id),
+    image: o.avatarUrl || '',
+  };
+}
+
 exports.createReview = async (req, res) => {
   try {
     const body = req.body;
-    let avatarUrl = body.avatarUrl || '';
+    let avatarUrl = resolveAvatarUrl(body);
     if (req.file) {
       avatarUrl = `/uploads/reviews/${req.file.filename}`;
     }
@@ -31,7 +48,7 @@ exports.createReview = async (req, res) => {
       sortOrder: body.sortOrder != null ? Number(body.sortOrder) : 0,
     });
     await doc.save();
-    res.status(201).json(doc);
+    res.status(201).json(toPublicReview(doc));
   } catch (err) {
     console.error('createReview:', err);
     res.status(500).json({ error: err.message });
@@ -51,13 +68,13 @@ exports.updateReview = async (req, res) => {
     };
     if (req.file) {
       update.avatarUrl = `/uploads/reviews/${req.file.filename}`;
-    } else if (body.avatarUrl != null) {
-      update.avatarUrl = body.avatarUrl;
+    } else if (body.avatarUrl != null || body.image != null) {
+      update.avatarUrl = resolveAvatarUrl(body);
     }
 
     const doc = await Review.findByIdAndUpdate(req.params.id, update, { new: true });
     if (!doc) return res.status(404).json({ error: 'Review not found' });
-    res.json(doc);
+    res.json(toPublicReview(doc));
   } catch (err) {
     console.error('updateReview:', err);
     res.status(500).json({ error: err.message });
@@ -67,7 +84,7 @@ exports.updateReview = async (req, res) => {
 exports.listPublishedReviews = async (req, res) => {
   try {
     const items = await Review.find({ published: true }).sort({ sortOrder: 1, createdAt: -1 });
-    res.json(items);
+    res.json(items.map(toPublicReview));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -76,7 +93,7 @@ exports.listPublishedReviews = async (req, res) => {
 exports.listAllReviewsAdmin = async (req, res) => {
   try {
     const items = await Review.find({}).sort({ sortOrder: 1, createdAt: -1 });
-    res.json(items);
+    res.json(items.map(toPublicReview));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -87,7 +104,7 @@ exports.getReview = async (req, res) => {
     const doc = await Review.findById(req.params.id);
     if (!doc) return res.status(404).json({ error: 'Review not found' });
     if (!doc.published) return res.status(404).json({ error: 'Review not found' });
-    res.json(doc);
+    res.json(toPublicReview(doc));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -97,7 +114,7 @@ exports.getReviewAdmin = async (req, res) => {
   try {
     const doc = await Review.findById(req.params.id);
     if (!doc) return res.status(404).json({ error: 'Review not found' });
-    res.json(doc);
+    res.json(toPublicReview(doc));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

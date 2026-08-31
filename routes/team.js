@@ -35,6 +35,10 @@ router.get('/admin/item/:id', auth, getTeamMemberAdmin);
 
 router.post('/', auth, upload.single('image'), createTeamMember);
 router.put('/items/:id', auth, upload.single('image'), updateTeamMember);
+router.patch('/items/:id', auth, upload.single('image'), updateTeamMember);
+router.patch('/:id', auth, upload.single('image'), updateTeamMember);
+router.put('/:id', auth, upload.single('image'), updateTeamMember);
 router.delete('/items/:id', auth, deleteTeamMember);
+router.delete('/:id', auth, deleteTeamMember);
 
 module.exports = router;

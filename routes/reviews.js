@@ -35,6 +35,10 @@ router.get('/admin/item/:id', auth, getReviewAdmin);
 
 router.post('/', auth, upload.single('avatar'), createReview);
 router.put('/items/:id', auth, upload.single('avatar'), updateReview);
+router.patch('/items/:id', auth, upload.single('avatar'), updateReview);
+router.patch('/:id', auth, upload.single('avatar'), updateReview);
+router.put('/:id', auth, upload.single('avatar'), updateReview);
 router.delete('/items/:id', auth, deleteReview);
+router.delete('/:id', auth, deleteReview);
 
 module.exports = router;
