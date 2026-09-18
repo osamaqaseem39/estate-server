@@ -297,7 +297,7 @@ const startServer = async () => {
 
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
-    console.log(`🚀 GT Estate API on port ${PORT}`);
+    console.log(`🚀 GT Estate API on port ${PORT} (ready)`);
     if (process.env.NODE_ENV !== 'production') {
       console.log(`📚 Swagger: http://localhost:${PORT}/api-docs`);
     }
