@@ -73,11 +73,49 @@ function parsePaymentPlan(body) {
     try { plan = JSON.parse(plan); } catch { plan = null; }
   }
   if (!plan || typeof plan !== 'object') return undefined;
+  const images = Array.isArray(plan.images)
+    ? plan.images
+        .map((img) => {
+          if (typeof img === 'string') {
+            const url = img.trim();
+            return url ? { url, alt: '', title: '' } : null;
+          }
+          if (img && typeof img === 'object') {
+            const url = String(img.url || '').trim();
+            if (!url) return null;
+            return {
+              url,
+              alt: String(img.alt || '').trim(),
+              title: String(img.title || '').trim(),
+            };
+          }
+          return null;
+        })
+        .filter(Boolean)
+    : [];
   return {
     enabled: plan.enabled === true || plan.enabled === 'true',
     title: plan.title || 'Payment Plan',
     rows: Array.isArray(plan.rows) ? plan.rows : [],
+    images,
   };
+}
+
+function parseFloorPlans(body) {
+  let floorPlans = body.floorPlans;
+  if (typeof floorPlans === 'string') {
+    try { floorPlans = JSON.parse(floorPlans); } catch { floorPlans = []; }
+  }
+  if (!Array.isArray(floorPlans)) return [];
+  return floorPlans.map((fp) => ({
+    name: String(fp?.name || '').trim(),
+    description: String(fp?.description || '').trim(),
+    imageUrl: String(fp?.imageUrl || '').trim(),
+    bedrooms: String(fp?.bedrooms || '').trim(),
+    bathrooms: String(fp?.bathrooms || '').trim(),
+    area: String(fp?.area || '').trim(),
+    notes: String(fp?.notes || '').trim(),
+  }));
 }
 
 function resolveSlug(body, title) {
@@ -133,7 +171,8 @@ exports.createProperty = async (req, res) => {
       primaryImage,
       gallery,
       inventory: parseInventory(body),
-      ...(parsePaymentPlan(body) && { paymentPlan: parsePaymentPlan(body) }),
+      paymentPlan: parsePaymentPlan(body) || undefined,
+      floorPlans: parseFloorPlans(body),
       sortOrder: body.sortOrder != null ? Number(body.sortOrder) : 0,
     });
 
@@ -172,9 +211,12 @@ exports.updateProperty = async (req, res) => {
     if (body.inventory !== undefined) update.inventory = parseInventory(body);
     const plan = parsePaymentPlan(body);
     if (plan !== undefined) update.paymentPlan = plan;
+    if (body.floorPlans !== undefined) update.floorPlans = parseFloorPlans(body);
 
     if (req.files?.primaryImage?.[0]) {
       update.primaryImage = `/uploads/properties/${req.files.primaryImage[0].filename}`;
+    } else if (body.primaryImage !== undefined) {
+      update.primaryImage = String(body.primaryImage || '').trim();
     }
     if (req.files?.gallery?.length) {
       const fromBody = parseGalleryFromBody(body);

@@ -9,6 +9,12 @@ const {
   listApplications,
   updateApplicationStatus,
 } = require('../controllers/careerController');
+const {
+  listJobPostings,
+  createJobPosting,
+  updateJobPosting,
+  deleteJobPosting,
+} = require('../controllers/jobPostingController');
 
 const uploadDir = ensureUploadSubdir('careers');
 
@@ -23,10 +29,10 @@ const upload = multer({
   limits: { fileSize: MAX_CV_UPLOAD_BYTES },
   fileFilter: (_req, file, cb) => {
     const ok =
-      /pdf|msword|wordprocessingml/.test(file.mimetype) ||
-      /\.(pdf|doc|docx)$/i.test(file.originalname);
+      /pdf|msword|wordprocessingml|jpeg|png|jpg/.test(file.mimetype) ||
+      /\.(pdf|doc|docx|jpg|jpeg|png)$/i.test(file.originalname);
     if (ok) cb(null, true);
-    else cb(new Error('Only PDF and Word documents are allowed'));
+    else cb(new Error('Only PDF, Word, and image files (JPG, PNG, JPEG) are allowed'));
   },
 });
 
@@ -34,5 +40,10 @@ router.post('/applications', upload.single('cv'), submitApplication);
 
 router.get('/applications', auth, listApplications);
 router.patch('/applications/:id', auth, updateApplicationStatus);
+
+router.get('/jobs', listJobPostings);
+router.post('/jobs', auth, createJobPosting);
+router.patch('/jobs/:id', auth, updateJobPosting);
+router.delete('/jobs/:id', auth, deleteJobPosting);
 
 module.exports = router;

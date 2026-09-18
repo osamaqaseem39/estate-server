@@ -4,10 +4,21 @@ const { toPublic, toPublicList } = require('../utils/publicDoc');
 exports.createLoanApplication = async (req, res) => {
   try {
     const body = req.body;
-    if (!body.fullName || !body.mobileNumber) {
-      return res.status(400).json({ error: 'fullName and mobileNumber are required' });
+    if (!body.fullName) {
+      return res.status(400).json({ error: 'fullName is required' });
     }
-    const doc = new LoanApplication(body);
+    const doc = new LoanApplication({
+      fullName: String(body.fullName).trim(),
+      fatherOrHusbandName: String(body.fatherOrHusbandName || '').trim(),
+      cnicNumber: String(body.cnicNumber || '').trim(),
+      monthlyIncome: String(body.monthlyIncome || body.monthlyGrossIncome || body.monthlyIncomeRange || '').trim(),
+      residentialAddress: String(body.residentialAddress || body.currentAddress || '').trim(),
+      propertyInterest: String(body.propertyInterest || '').trim(),
+      requiredLoanAmount: String(body.requiredLoanAmount || body.requiredLoanAmountCustom || '').trim(),
+      profession: String(body.profession || body.employmentStatus || '').trim(),
+      mobileNumber: String(body.mobileNumber || '').trim(),
+      email: String(body.email || '').trim(),
+    });
     await doc.save();
     res.status(201).json({ message: 'Application submitted successfully', id: String(doc._id) });
   } catch (err) {

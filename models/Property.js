@@ -12,6 +12,15 @@ const inventoryItemSchema = new mongoose.Schema(
   { _id: true },
 );
 
+const paymentPlanImageSchema = new mongoose.Schema(
+  {
+    url: { type: String, default: '' },
+    alt: { type: String, default: '' },
+    title: { type: String, default: '' },
+  },
+  { _id: false },
+);
+
 const paymentPlanRowSchema = new mongoose.Schema(
   {
     milestone: { type: String, default: '' },
@@ -21,6 +30,19 @@ const paymentPlanRowSchema = new mongoose.Schema(
     notes: { type: String, default: '' },
   },
   { _id: false },
+);
+
+const floorPlanSchema = new mongoose.Schema(
+  {
+    name: { type: String, default: '' },
+    description: { type: String, default: '' },
+    imageUrl: { type: String, default: '' },
+    bedrooms: { type: String, default: '' },
+    bathrooms: { type: String, default: '' },
+    area: { type: String, default: '' },
+    notes: { type: String, default: '' },
+  },
+  { _id: true },
 );
 
 const propertySchema = new mongoose.Schema(
@@ -49,7 +71,9 @@ const propertySchema = new mongoose.Schema(
       enabled: { type: Boolean, default: false },
       title: { type: String, default: 'Payment Plan' },
       rows: { type: [paymentPlanRowSchema], default: [] },
+      images: { type: [paymentPlanImageSchema], default: [] },
     },
+    floorPlans: { type: [floorPlanSchema], default: [] },
     sortOrder: { type: Number, default: 0 },
   },
   { timestamps: true },

@@ -1,4 +1,5 @@
 const CareerApplication = require('../models/CareerApplication');
+const { toPublic, toPublicList } = require('../utils/publicDoc');
 
 exports.submitApplication = async (req, res) => {
   try {
@@ -37,7 +38,7 @@ exports.submitApplication = async (req, res) => {
 exports.listApplications = async (req, res) => {
   try {
     const items = await CareerApplication.find().sort({ createdAt: -1 });
-    res.json(items);
+    res.json(toPublicList(items));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -52,7 +53,7 @@ exports.updateApplicationStatus = async (req, res) => {
     }
     const doc = await CareerApplication.findByIdAndUpdate(req.params.id, { status }, { new: true });
     if (!doc) return res.status(404).json({ error: 'Application not found' });
-    res.json(doc);
+    res.json(toPublic(doc));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

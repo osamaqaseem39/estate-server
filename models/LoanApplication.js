@@ -2,6 +2,19 @@ const mongoose = require('mongoose');
 
 const loanApplicationSchema = new mongoose.Schema(
   {
+    fullName: { type: String, required: true, trim: true },
+    fatherOrHusbandName: { type: String, default: '' },
+    cnicNumber: { type: String, default: '' },
+    monthlyIncome: { type: String, default: '' },
+    residentialAddress: { type: String, default: '' },
+    propertyInterest: {
+      type: String,
+      enum: ['Plot', 'Townhouse', 'Home', 'Apartment', ''],
+      default: '',
+    },
+    requiredLoanAmount: { type: String, default: '' },
+    profession: { type: String, default: '' },
+    /** Legacy fields kept for older submissions */
     applicantType: { type: String, default: '' },
     cnicStatus: { type: String, default: '' },
     maritalStatus: { type: String, default: '' },
@@ -13,17 +26,13 @@ const loanApplicationSchema = new mongoose.Schema(
     propertyStatus: { type: String, default: '' },
     propertyOwnership: { type: String, default: '' },
     propertySize: { type: String, default: '' },
-    requiredLoanAmount: { type: String, default: '' },
     requiredLoanAmountCustom: { type: String, default: '' },
     preferredLoanTenure: { type: String, default: '' },
     currentHomeOwnership: { type: String, default: '' },
     preferredBank: { type: String, default: '' },
     city: { type: String, default: '' },
-    fullName: { type: String, required: true, trim: true },
-    fatherOrHusbandName: { type: String, default: '' },
-    cnicNumber: { type: String, default: '' },
     dateOfBirth: { type: String, default: '' },
-    mobileNumber: { type: String, required: true, trim: true },
+    mobileNumber: { type: String, default: '' },
     email: { type: String, default: '' },
     currentAddress: { type: String, default: '' },
     permanentAddress: { type: String, default: '' },
